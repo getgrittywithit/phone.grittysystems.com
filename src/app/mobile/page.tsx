@@ -29,13 +29,13 @@ export default function MobileApp() {
   }, [activeBrand])
 
   const loadContacts = async () => {
-    console.log(`[MobileApp] Loading contacts for brand: ${activeBrand.id}`)
+    console.log(`[MobileApp] Loading ALL contacts (not filtered by brand)`)
     setIsLoading(true)
     try {
       const [allContacts, favorites, recent] = await Promise.all([
-        ContactService.getContactsByBrand(activeBrand.id),
-        ContactService.getFavoriteContacts(activeBrand.id),
-        ContactService.getRecentContacts(activeBrand.id, 5)
+        ContactService.getAllContacts(),
+        ContactService.getFavoriteContacts(), // Remove brand filter from favorites too
+        ContactService.getRecentContacts() // Remove brand filter from recent too
       ])
       
       console.log(`[MobileApp] Loaded: ${allContacts.length} contacts, ${favorites.length} favorites, ${recent.length} recent`)

@@ -2,6 +2,29 @@ import { supabase, supabaseAdmin } from './supabase'
 import { Contact, ContactInsert, ContactUpdate } from '@/types/contact'
 
 export class ContactService {
+  // Get all contacts (regardless of brand)
+  static async getAllContacts(): Promise<Contact[]> {
+    console.log(`[ContactService] Fetching ALL contacts`)
+    
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .order('name')
+
+      if (error) {
+        console.error('[ContactService] Error fetching all contacts:', error)
+        return []
+      }
+
+      console.log(`[ContactService] Found ${data?.length || 0} total contacts`)
+      return data || []
+    } catch (error) {
+      console.error('[ContactService] Exception:', error)
+      return []
+    }
+  }
+
   // Get all contacts for a specific brand
   static async getContactsByBrand(brandId: string): Promise<Contact[]> {
     console.log(`[ContactService] Fetching contacts for brand: ${brandId}`)
@@ -54,6 +77,7 @@ export class ContactService {
 
   // Get favorite contacts
   static async getFavoriteContacts(brandId?: string): Promise<Contact[]> {
+    console.log(`[ContactService] Fetching favorite contacts${brandId ? ` for brand: ${brandId}` : ' (all brands)'}`)
     try {
       let queryBuilder = supabase
         .from('contacts')
@@ -67,19 +91,21 @@ export class ContactService {
       const { data, error } = await queryBuilder.order('name')
 
       if (error) {
-        console.error('Error fetching favorite contacts:', error)
+        console.error('[ContactService] Error fetching favorite contacts:', error)
         return []
       }
 
+      console.log(`[ContactService] Found ${data?.length || 0} favorite contacts`)
       return data || []
     } catch (error) {
-      console.error('ContactService favorite contacts error:', error)
+      console.error('[ContactService] Favorite contacts error:', error)
       return []
     }
   }
 
   // Get recent contacts (based on last_contact)
   static async getRecentContacts(brandId?: string, limit: number = 10): Promise<Contact[]> {
+    console.log(`[ContactService] Fetching recent contacts${brandId ? ` for brand: ${brandId}` : ' (all brands)'}`)
     try {
       let queryBuilder = supabase
         .from('contacts')
@@ -95,13 +121,14 @@ export class ContactService {
         .limit(limit)
 
       if (error) {
-        console.error('Error fetching recent contacts:', error)
+        console.error('[ContactService] Error fetching recent contacts:', error)
         return []
       }
 
+      console.log(`[ContactService] Found ${data?.length || 0} recent contacts`)
       return data || []
     } catch (error) {
-      console.error('ContactService recent contacts error:', error)
+      console.error('[ContactService] Recent contacts error:', error)
       return []
     }
   }

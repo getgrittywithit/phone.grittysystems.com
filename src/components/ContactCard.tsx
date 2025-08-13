@@ -6,6 +6,7 @@ import { Contact } from '@/types/contact'
 import { ContactService } from '@/lib/contacts'
 import { CallButton } from './CallButton'
 import { SMSDialog } from './SMSDialog'
+import { brands } from '@/types/brand'
 
 interface ContactCardProps {
   contact: Contact
@@ -39,6 +40,26 @@ export function ContactCard({ contact, onUpdate }: ContactCardProps) {
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-1">
             <h3 className="font-medium text-gray-900">{contact.name}</h3>
+            {/* Brand badge */}
+            {(() => {
+              const brand = brands.find(b => b.id === contact.brand_id)
+              if (brand) {
+                return (
+                  <span 
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{ 
+                      backgroundColor: brand.id === 'triton' ? '#FF6B3520' : 
+                                      brand.id === 'school' ? '#3B82F620' : '#6B728020',
+                      color: brand.id === 'triton' ? '#FF6B35' : 
+                             brand.id === 'school' ? '#3B82F6' : '#6B7280'
+                    }}
+                  >
+                    {brand.icon} {brand.name}
+                  </span>
+                )
+              }
+              return null
+            })()}
             <button
               onClick={toggleFavorite}
               disabled={isUpdating}
