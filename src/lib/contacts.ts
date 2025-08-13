@@ -4,7 +4,8 @@ import { Contact, ContactInsert, ContactUpdate } from '@/types/contact'
 export class ContactService {
   // Get all contacts for a specific brand
   static async getContactsByBrand(brandId: string): Promise<Contact[]> {
-
+    console.log(`[ContactService] Fetching contacts for brand: ${brandId}`)
+    
     try {
       const { data, error } = await supabase
         .from('contacts')
@@ -13,13 +14,14 @@ export class ContactService {
         .order('name')
 
       if (error) {
-        console.error('Error fetching contacts:', error)
+        console.error('[ContactService] Error fetching contacts:', error)
         return []
       }
 
+      console.log(`[ContactService] Found ${data?.length || 0} contacts for brand ${brandId}`)
       return data || []
     } catch (error) {
-      console.error('ContactService error:', error)
+      console.error('[ContactService] Exception:', error)
       return []
     }
   }

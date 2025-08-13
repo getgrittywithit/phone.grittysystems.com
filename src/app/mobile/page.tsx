@@ -29,6 +29,7 @@ export default function MobileApp() {
   }, [activeBrand])
 
   const loadContacts = async () => {
+    console.log(`[MobileApp] Loading contacts for brand: ${activeBrand.id}`)
     setIsLoading(true)
     try {
       const [allContacts, favorites, recent] = await Promise.all([
@@ -37,11 +38,12 @@ export default function MobileApp() {
         ContactService.getRecentContacts(activeBrand.id, 5)
       ])
       
+      console.log(`[MobileApp] Loaded: ${allContacts.length} contacts, ${favorites.length} favorites, ${recent.length} recent`)
       setContacts(allContacts)
       setFavoriteContacts(favorites)
       setRecentContacts(recent)
     } catch (error) {
-      console.error('Error loading contacts:', error)
+      console.error('[MobileApp] Error loading contacts:', error)
     } finally {
       setIsLoading(false)
     }

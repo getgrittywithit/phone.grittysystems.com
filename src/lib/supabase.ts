@@ -22,6 +22,9 @@ const getSupabaseAnonKey = () => {
 const supabaseUrl = getSupabaseUrl()
 const supabaseAnonKey = getSupabaseAnonKey()
 
+console.log('[Supabase] Initializing with URL:', supabaseUrl)
+console.log('[Supabase] Using key:', supabaseAnonKey.substring(0, 20) + '...')
+
 // Client for frontend operations
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
