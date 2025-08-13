@@ -1,0 +1,255 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  phoneNumbers   PhoneNumber[]
+  calls          Call[]
+  messages       Message[]
+  contacts       Contact[]
+  voicemails     Voicemail[]
+  aiAgents       AIAgent[]
+  userPhoneNumbers UserPhoneNumber[]
+}
+
+model PhoneNumber {
+  id              String            @id @default(cuid())
+  number          String            @unique
+  friendlyName    String
+  type            PhoneNumberType
+  twilioSid       String?
+  status          PhoneNumberStatus @default(ACTIVE)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  owner           User              @relation(fields: [ownerId], references: [id])
+  ownerId         String
+  
+  calls           Call[]
+  messages        Message[]
+  voicemails      Voicemail[]
+  aiAgent         AIAgent?
+  userPhoneNumbers UserPhoneNumber[]
+
+  @@index([ownerId])
+}
+
+model UserPhoneNumber {
+  id            String   @id @default(cuid())
+  userId        String
+  phoneNumberId String
+  canReceive    Boolean  @default(true)
+  canSend       Boolean  @default(true)
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phoneNumber   PhoneNumber @relation(fields: [phoneNumberId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, phoneNumberId])
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  name        String?
+  phoneNumber String
+  email       String?
+  notes       String?
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User     @relation(fields: [ownerId], references: [id])
+  ownerId     String
+
+  calls       Call[]
+  messages    Message[]
+  voicemails  Voicemail[]
+
+  @@index([ownerId, phoneNumber])
+}
+
+model Call {
+  id            String     @id @default(cuid())
+  twilioCallSid String     @unique
+  direction     CallDirection
+  status        CallStatus
+  duration      Int?       // in seconds
+  recordingUrl  String?
+  transcription String?    @db.Text
+  startTime     DateTime
+  endTime       DateTime?
+  createdAt     DateTime   @default(now())
+
+  fromNumber    String
+  toNumber      String
+  
+  phoneNumber   PhoneNumber @relation(fields: [phoneNumberId], references: [id])
+  phoneNumberId String
+  
+  user          User        @relation(fields: [userId], references: [id])
+  userId        String
+  
+  contact       Contact?    @relation(fields: [contactId], references: [id])
+  contactId     String?
+
+  @@index([phoneNumberId])
+  @@index([userId])
+}
+
+model Message {
+  id            String        @id @default(cuid())
+  twilioSid     String        @unique
+  direction     MessageDirection
+  content       String        @db.Text
+  mediaUrls     String[]
+  status        MessageStatus
+  sentAt        DateTime
+  createdAt     DateTime      @default(now())
+
+  fromNumber    String
+  toNumber      String
+  
+  phoneNumber   PhoneNumber   @relation(fields: [phoneNumberId], references: [id])
+  phoneNumberId String
+  
+  user          User          @relation(fields: [userId], references: [id])
+  userId        String
+  
+  contact       Contact?      @relation(fields: [contactId], references: [id])
+  contactId     String?
+
+  @@index([phoneNumberId])
+  @@index([userId])
+}
+
+model Voicemail {
+  id            String   @id @default(cuid())
+  twilioSid     String   @unique
+  recordingUrl  String
+  transcription String?  @db.Text
+  duration      Int      // in seconds
+  fromNumber    String
+  receivedAt    DateTime
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  phoneNumber   PhoneNumber @relation(fields: [phoneNumberId], references: [id])
+  phoneNumberId String
+  
+  user          User        @relation(fields: [userId], references: [id])
+  userId        String
+  
+  contact       Contact?    @relation(fields: [contactId], references: [id])
+  contactId     String?
+
+  @@index([phoneNumberId])
+  @@index([userId])
+}
+
+model AIAgent {
+  id            String     @id @default(cuid())
+  name          String
+  voice         String     // ElevenLabs voice ID
+  personality   String     @db.Text
+  instructions  String     @db.Text
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  phoneNumber   PhoneNumber @relation(fields: [phoneNumberId], references: [id])
+  phoneNumberId String      @unique
+  
+  owner         User        @relation(fields: [ownerId], references: [id])
+  ownerId       String
+
+  @@index([ownerId])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum PhoneNumberType {
+  LOCAL
+  TOLLFREE
+  MOBILE
+}
+
+enum PhoneNumberStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CallStatus {
+  RINGING
+  IN_PROGRESS
+  COMPLETED
+  BUSY
+  NO_ANSWER
+  FAILED
+  CANCELED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  UNDELIVERED
+  FAILED
+}
