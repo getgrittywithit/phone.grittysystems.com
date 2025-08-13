@@ -2,20 +2,8 @@ import { supabase, supabaseAdmin } from './supabase'
 import { Contact, ContactInsert, ContactUpdate } from '@/types/contact'
 
 export class ContactService {
-  // Check if Supabase is properly configured
-  static isConfigured(): boolean {
-    return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && 
-             process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
-             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'placeholder-key')
-  }
-
   // Get all contacts for a specific brand
   static async getContactsByBrand(brandId: string): Promise<Contact[]> {
-    if (!this.isConfigured()) {
-      console.warn('Supabase not configured, returning empty contacts')
-      return []
-    }
 
     try {
       const { data, error } = await supabase
@@ -38,10 +26,6 @@ export class ContactService {
 
   // Search contacts
   static async searchContacts(query: string, brandId?: string): Promise<Contact[]> {
-    if (!this.isConfigured()) {
-      return []
-    }
-
     try {
       let queryBuilder = supabase
         .from('contacts')
@@ -68,10 +52,6 @@ export class ContactService {
 
   // Get favorite contacts
   static async getFavoriteContacts(brandId?: string): Promise<Contact[]> {
-    if (!this.isConfigured()) {
-      return []
-    }
-
     try {
       let queryBuilder = supabase
         .from('contacts')
@@ -98,10 +78,6 @@ export class ContactService {
 
   // Get recent contacts (based on last_contact)
   static async getRecentContacts(brandId?: string, limit: number = 10): Promise<Contact[]> {
-    if (!this.isConfigured()) {
-      return []
-    }
-
     try {
       let queryBuilder = supabase
         .from('contacts')
@@ -130,10 +106,6 @@ export class ContactService {
 
   // Find contact by phone number
   static async findContactByPhone(phoneNumber: string): Promise<Contact | null> {
-    if (!this.isConfigured()) {
-      return null
-    }
-
     try {
       const { data, error } = await supabase
         .from('contacts')
@@ -155,11 +127,6 @@ export class ContactService {
 
   // Create a new contact
   static async createContact(contact: ContactInsert): Promise<Contact | null> {
-    if (!this.isConfigured()) {
-      console.warn('Supabase not configured, cannot create contact')
-      return null
-    }
-
     try {
       const { data, error } = await supabase
         .from('contacts')
@@ -181,11 +148,6 @@ export class ContactService {
 
   // Update a contact
   static async updateContact(id: string, updates: ContactUpdate): Promise<Contact | null> {
-    if (!this.isConfigured()) {
-      console.warn('Supabase not configured, cannot update contact')
-      return null
-    }
-
     try {
       const { data, error } = await supabase
         .from('contacts')
@@ -208,11 +170,6 @@ export class ContactService {
 
   // Delete a contact
   static async deleteContact(id: string): Promise<boolean> {
-    if (!this.isConfigured()) {
-      console.warn('Supabase not configured, cannot delete contact')
-      return false
-    }
-
     try {
       const { error } = await supabase
         .from('contacts')
@@ -233,11 +190,6 @@ export class ContactService {
 
   // Toggle favorite status
   static async toggleFavorite(id: string): Promise<Contact | null> {
-    if (!this.isConfigured()) {
-      console.warn('Supabase not configured, cannot toggle favorite')
-      return null
-    }
-
     try {
       // First get the current favorite status
       const { data: currentContact } = await supabase
@@ -270,11 +222,6 @@ export class ContactService {
 
   // Update last contact time (when call/sms happens)
   static async updateLastContact(phoneNumber: string): Promise<void> {
-    if (!this.isConfigured()) {
-      console.warn('Supabase not configured, cannot update last contact')
-      return
-    }
-
     try {
       const { error } = await supabase
         .from('contacts')
@@ -291,11 +238,6 @@ export class ContactService {
 
   // Bulk import contacts (admin function)
   static async bulkImportContacts(contacts: ContactInsert[]): Promise<boolean> {
-    if (!this.isConfigured()) {
-      console.warn('Supabase not configured, cannot bulk import contacts')
-      return false
-    }
-
     try {
       const { error } = await supabaseAdmin
         .from('contacts')
@@ -315,11 +257,6 @@ export class ContactService {
 
   // Auto-create contact from incoming call/SMS if not exists
   static async autoCreateContact(phoneNumber: string, brandId: string, source: 'call' | 'sms'): Promise<Contact | null> {
-    if (!this.isConfigured()) {
-      console.warn('Supabase not configured, cannot auto-create contact')
-      return null
-    }
-
     try {
       // Check if contact already exists
       const existingContact = await this.findContactByPhone(phoneNumber)
