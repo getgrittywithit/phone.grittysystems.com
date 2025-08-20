@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Phone, MessageCircle, Voicemail, Settings, Users, Plus } from 'lucide-react'
+import { Phone, MessageCircle, Voicemail, Settings, Users, Plus, Search, Activity, Bell, HelpCircle, ChevronRight, Filter, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CallButton } from '@/components/CallButton'
 import { SMSDialog } from '@/components/SMSDialog'
+import { ContactsDesktop } from '@/components/ContactsDesktop'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
@@ -34,192 +35,369 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Phone Hub</h1>
-            <p className="text-sm text-gray-600">Family Communication Center</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Number
-            </Button>
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">JD</span>
+    <div className="min-h-screen bg-[var(--sidebar-bg)] flex">
+
+      {/* Sidebar */}
+      <aside className="w-64 bg-[var(--sidebar-bg)] border-r border-[var(--border)] flex flex-col h-screen">
+        {/* User Profile Section */}
+        <div className="p-4 border-b border-[var(--border)]">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-[var(--primary)] rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-medium">LM</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-[var(--foreground)]">Levi Moses</h3>
             </div>
           </div>
         </div>
-      </header>
 
-      <div className="flex h-[calc(100vh-80px)]">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-gray-200 p-6">
-          <nav className="space-y-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center px-3 py-2 text-left rounded-lg transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </nav>
+        {/* Search */}
+        <div className="p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              placeholder="Search"
+              className="w-full pl-10 pr-3 py-2 bg-[var(--card-bg)] border border-[var(--border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+            />
+          </div>
+        </div>
+        {/* Navigation */}
+        <nav className="flex-1 px-4">
+          <div className="space-y-1">
+            <button
+              onClick={() => setActiveTab('activity')}
+              className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                activeTab === 'activity'
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'text-[var(--foreground)] hover:bg-[var(--card-bg)]'
+              }`}
+            >
+              <Activity className="w-4 h-4 mr-3" />
+              Activity
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('contacts')}
+              className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                activeTab === 'contacts'
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'text-[var(--foreground)] hover:bg-[var(--card-bg)]'
+              }`}
+            >
+              <Users className="w-4 h-4 mr-3" />
+              Contacts
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                activeTab === 'analytics'
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'text-[var(--foreground)] hover:bg-[var(--card-bg)]'
+              }`}
+            >
+              <Activity className="w-4 h-4 mr-3" />
+              Analytics
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('sona')}
+              className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors group ${
+                activeTab === 'sona'
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'text-[var(--foreground)] hover:bg-[var(--card-bg)]'
+              }`}
+            >
+              <div className="w-4 h-4 mr-3 rounded bg-gradient-to-br from-purple-500 to-pink-500"></div>
+              Sona
+              <span className="ml-1 text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded group-hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300">Try for free</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                activeTab === 'settings'
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'text-[var(--foreground)] hover:bg-[var(--card-bg)]'
+              }`}
+            >
+              <Settings className="w-4 h-4 mr-3" />
+              Settings
+            </button>
+          </div>
 
-          {/* Phone Numbers */}
-          <div className="mt-8">
-            <h3 className="text-sm font-medium text-gray-900 mb-4">Phone Numbers</h3>
-            <div className="space-y-3">
-              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-medium text-green-900">Work - Main</p>
-                    <p className="text-sm text-green-700">+1 (830) 500-5485</p>
-                  </div>
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          {/* Inboxes Section */}
+          <div className="mt-8 mb-4">
+            <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Inboxes</h3>
+            <div className="space-y-1">
+              <div className="flex items-center px-3 py-2 text-sm rounded-lg hover:bg-[var(--card-bg)] cursor-pointer group">
+                <div className="w-6 h-6 rounded bg-gradient-to-br from-gray-400 to-gray-600 mr-3 flex items-center justify-center">
+                  <span className="text-white text-xs font-medium">GC</span>
                 </div>
-                <div className="text-xs text-green-600">
-                  AI Agent: Professional Assistant
-                </div>
+                <span className="text-[var(--foreground)]">Grit Collective</span>
+                <span className="ml-auto text-xs text-[var(--text-muted)]">+1 (830) 331-5566</span>
               </div>
               
-              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-medium text-blue-900">School - Kids</p>
-                    <p className="text-sm text-blue-700">+1 (830) 500-5485</p>
-                  </div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex items-center px-3 py-2 text-sm rounded-lg hover:bg-[var(--card-bg)] cursor-pointer group">
+                <div className="w-6 h-6 rounded bg-gradient-to-br from-orange-400 to-orange-600 mr-3 flex items-center justify-center">
+                  <span className="text-white text-xs font-medium">T</span>
                 </div>
-                <div className="text-xs text-blue-600">
-                  AI Agent: School Communication Helper
-                </div>
+                <span className="text-[var(--foreground)]">Triton - Main</span>
+                <span className="ml-auto text-xs text-[var(--text-muted)]">+1 (830) 448-3333</span>
+                <div className="w-2 h-2 bg-red-500 rounded-full ml-2"></div>
               </div>
               
-              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-medium text-purple-900">Personal</p>
-                    <p className="text-sm text-purple-700">+1 (830) 500-5485</p>
-                  </div>
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                </div>
-                <div className="text-xs text-purple-600">
-                  AI Agent: Family Assistant
-                </div>
+              <div className="flex items-center px-3 py-2 text-sm rounded-lg hover:bg-[var(--card-bg)] cursor-pointer group">
+                <ChevronRight className="w-4 h-4 mr-1 text-[var(--text-muted)]" />
+                <span className="text-[var(--foreground)] text-sm">Dont Answer</span>
+                <span className="ml-auto text-xs text-[var(--text-muted)]">+1 (830) 510-1630</span>
+                <div className="w-2 h-2 bg-red-500 rounded-full ml-2"></div>
               </div>
             </div>
           </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 capitalize">{activeTab}</h2>
+          
+          {/* Your Team Section */}
+          <div className="mb-4">
+            <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Your team</h3>
+            <div className="space-y-1">
+              <div className="flex items-center px-3 py-2 text-sm rounded-lg hover:bg-[var(--card-bg)] cursor-pointer">
+                <div className="w-6 h-6 rounded-full bg-[var(--primary)] mr-3 flex items-center justify-center">
+                  <span className="text-white text-xs font-medium">LM</span>
+                </div>
+                <span className="text-[var(--foreground)]">Levi Moses</span>
+                <span className="ml-auto text-xs text-[var(--text-muted)]">You</span>
+              </div>
+              
+              <button className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-[var(--card-bg)] text-[var(--primary)]">
+                <Plus className="w-4 h-4 mr-3" />
+                Invite your team
+              </button>
             </div>
-            
-            <div className="p-6">
-              {activeTab === 'calls' && (
-                <div>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <h3 className="font-medium text-blue-900 mb-3">Test Your Phone Hub</h3>
-                    <p className="text-sm text-blue-700 mb-4">
-                      Try calling or texting your Twilio number: <strong>+1 (830) 500-5485</strong>
-                    </p>
-                    <div className="flex space-x-4">
-                      <CallButton
-                        toNumber="+18305005485"
-                        fromNumber="+18305005485"
-                        label="Test Call"
-                      />
-                      <SMSDialog
-                        toNumber="+18305005485"
-                        fromNumber="+18305005485"
-                      />
+          </div>
+        </nav>
+        
+        {/* Bottom Actions */}
+        <div className="p-4 border-t border-[var(--border)]">
+          <button className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-[var(--card-bg)] text-[var(--foreground)]">
+            <span className="mr-3">🔗</span>
+            Refer and earn
+          </button>
+          <button className="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-[var(--card-bg)] text-[var(--foreground)]">
+            <HelpCircle className="w-4 h-4 mr-3" />
+            Help and support
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col bg-[var(--background)]">
+        {/* Top Header */}
+        <header className="bg-[var(--card-bg)] border-b border-[var(--border)] px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-xl font-semibold text-[var(--foreground)] capitalize">
+                {activeTab === 'activity' ? 'Chats' : activeTab}
+              </h1>
+              <button className="text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] flex items-center">
+                Calls
+              </button>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button className="p-2 hover:bg-[var(--background)] rounded-lg transition-colors">
+                <Phone className="w-5 h-5 text-[var(--foreground)]" />
+              </button>
+              <button className="p-2 hover:bg-[var(--background)] rounded-lg transition-colors">
+                <MessageCircle className="w-5 h-5 text-[var(--foreground)]" />
+              </button>
+              <button className="p-2 hover:bg-[var(--background)] rounded-lg transition-colors relative">
+                <Bell className="w-5 h-5 text-[var(--foreground)]" />
+                <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></div>
+              </button>
+              <button className="p-2 hover:bg-[var(--background)] rounded-lg transition-colors">
+                <Settings className="w-5 h-5 text-[var(--foreground)]" />
+              </button>
+            </div>
+          </div>
+        </header>
+        
+        <div className="flex-1 flex">
+          {activeTab === 'activity' && (
+            <div className="flex flex-1">
+              {/* Chat List */}
+              <div className="w-96 bg-[var(--card-bg)] border-r border-[var(--border)]">
+                {/* Filter Bar */}
+                <div className="p-4 border-b border-[var(--border)]">
+                  <div className="flex items-center space-x-3">
+                    <button className="flex items-center text-sm text-[var(--foreground)] hover:bg-[var(--background)] px-3 py-1.5 rounded-lg">
+                      Open <ChevronDown className="w-4 h-4 ml-1" />
+                    </button>
+                    <button className="flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--foreground)]">
+                      Unread
+                    </button>
+                    <button className="flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--foreground)]">
+                      Unresponded
+                    </button>
+                    <button className="ml-auto p-1.5 hover:bg-[var(--background)] rounded-lg">
+                      <Filter className="w-4 h-4 text-[var(--text-muted)]" />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Sample Chat Items */}
+                <div className="divide-y divide-[var(--border)]">
+                  <div className="p-4 hover:bg-[var(--background)] cursor-pointer transition-colors">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-sm font-medium">MC</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-medium text-[var(--foreground)] truncate">MELISSA CURD-Gilded Peacock</h4>
+                          <span className="text-xs text-[var(--text-muted)]">Aug 16</span>
+                        </div>
+                        <p className="text-sm text-[var(--text-muted)] truncate">Ok 👍</p>
+                        <div className="flex items-center mt-1">
+                          <span className="text-xs text-[var(--text-muted)]">✓ Called you</span>
+                          <div className="w-1 h-1 bg-[var(--text-muted)] rounded-full mx-2"></div>
+                          <span className="text-xs text-[var(--primary)]">+1 (830) 777-7633</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="text-center py-12">
-                    <Phone className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No recent calls</h3>
-                    <p className="text-gray-500">Incoming and outgoing calls will appear here</p>
-                  </div>
-                </div>
-              )}
-              
-              {activeTab === 'messages' && (
-                <div className="text-center py-12">
-                  <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No messages</h3>
-                  <p className="text-gray-500">SMS and MMS messages will appear here</p>
-                </div>
-              )}
-              
-              {activeTab === 'voicemails' && (
-                <div className="text-center py-12">
-                  <Voicemail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No voicemails</h3>
-                  <p className="text-gray-500">Voicemail recordings will appear here</p>
-                </div>
-              )}
-              
-              {activeTab === 'contacts' && (
-                <div className="text-center py-12">
-                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No contacts</h3>
-                  <p className="text-gray-500">Your saved contacts will appear here</p>
-                  <Button className="mt-4">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Contact
-                  </Button>
-                </div>
-              )}
-              
-              {activeTab === 'settings' && (
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Account Settings</h4>
-                      <p className="text-sm text-gray-600 mb-4">Manage your profile and preferences</p>
-                      <Button variant="outline">Edit Profile</Button>
-                    </div>
-                    
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Phone Numbers</h4>
-                      <p className="text-sm text-gray-600 mb-4">Add, remove, or configure phone numbers</p>
-                      <Button variant="outline">Manage Numbers</Button>
-                    </div>
-                    
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-medium text-gray-900 mb-2">AI Agents</h4>
-                      <p className="text-sm text-gray-600 mb-4">Configure AI voice agents for each number</p>
-                      <Button variant="outline">Configure AI</Button>
-                    </div>
-                    
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Integrations</h4>
-                      <p className="text-sm text-gray-600 mb-4">Connect with Twilio and ElevenLabs</p>
-                      <Button variant="outline">View Integrations</Button>
+                  <div className="p-4 hover:bg-[var(--background)] cursor-pointer transition-colors">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-sm font-medium">?</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-medium text-[var(--foreground)] truncate">(726) 200-4200</h4>
+                          <span className="text-xs text-[var(--text-muted)]">3:58 PM</span>
+                        </div>
+                        <p className="text-sm text-[var(--text-muted)] truncate">Hello, My name is Thomas Taylor, and ...</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+              
+              {/* Chat Content */}
+              <div className="flex-1 flex flex-col bg-[var(--card-bg)]">
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <MessageCircle className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">Select a conversation</h3>
+                    <p className="text-[var(--text-muted)]">Choose a chat from the list to start messaging</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </main>
-      </div>
+          )}
+          
+          {activeTab === 'contacts' && (
+            <div className="flex-1">
+              <ContactsDesktop />
+            </div>
+          )}
+          
+          {activeTab === 'analytics' && (
+            <div className="p-6">
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-[var(--foreground)]">Analytics</h2>
+                  <button className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-hover)] transition-colors">
+                    Export CSV
+                  </button>
+                </div>
+                <p className="text-[var(--text-muted)]">Have an in-depth look at all the metrics within your workspace</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                <div className="bg-[var(--card-bg)] p-6 rounded-lg border border-[var(--border)]">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-[var(--text-muted)]">Messages</span>
+                    <span className="text-xs text-[var(--text-muted)]">↑</span>
+                  </div>
+                  <p className="text-3xl font-bold text-[var(--foreground)]">78</p>
+                </div>
+                
+                <div className="bg-[var(--card-bg)] p-6 rounded-lg border border-[var(--border)]">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-[var(--text-muted)]">Calls</span>
+                    <span className="text-xs text-[var(--text-muted)]">↑</span>
+                  </div>
+                  <p className="text-3xl font-bold text-[var(--foreground)]">33</p>
+                </div>
+              </div>
+              
+              <div className="text-center py-12">
+                <Activity className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">Analytics Dashboard</h3>
+                <p className="text-[var(--text-muted)]">Detailed metrics and insights will appear here</p>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 'settings' && (
+            <div className="flex-1 bg-[var(--card-bg)]">
+              <div className="max-w-4xl mx-auto p-8">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-semibold text-[var(--foreground)] mb-2">Workspace</h2>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="border border-[var(--border)] rounded-lg p-6">
+                    <h3 className="font-medium text-[var(--foreground)] mb-4">Allowed email domains</h3>
+                    <p className="text-sm text-[var(--text-muted)] mb-4">
+                      Anyone with an email address at these domains can sign up for this workspace
+                    </p>
+                    <button className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)]">
+                      Add a domain
+                    </button>
+                  </div>
+                  
+                  <div className="border border-[var(--border)] rounded-lg p-6">
+                    <h3 className="font-medium text-[var(--foreground)] mb-4">Members</h3>
+                    <p className="text-sm text-[var(--text-muted)] mb-4">
+                      Manage all members in your workspace
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center">
+                          <span className="text-white text-sm font-medium">LM</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-[var(--foreground)]">Levi Moses</p>
+                          <p className="text-sm text-[var(--text-muted)]">levimoses2008@gmail.com</p>
+                        </div>
+                      </div>
+                      <span className="text-sm text-[var(--text-muted)]">Owner</span>
+                    </div>
+                    <button className="mt-4 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-hover)] transition-colors">
+                      Invite your team
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 'sona' && (
+            <div className="flex-1 flex items-center justify-center bg-[var(--card-bg)]">
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-pink-500"></div>
+                <h3 className="text-2xl font-bold text-[var(--foreground)] mb-2">Sona AI Assistant</h3>
+                <p className="text-[var(--text-muted)] mb-6">Your intelligent voice assistant for handling calls</p>
+                <button className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:opacity-90 transition-opacity">
+                  Try Sona for Free
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   )
 }
