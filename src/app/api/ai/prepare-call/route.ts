@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = `You are an AI assistant helping to prepare for a phone call. 
     
-    The user is making a call on behalf of ${brand.name} (${brand.type}).
+    The user is making a call on behalf of ${brand.name}${brand.type ? ` (${brand.type})` : ''}.
     ${brand.description}
     
     Your role is to:
