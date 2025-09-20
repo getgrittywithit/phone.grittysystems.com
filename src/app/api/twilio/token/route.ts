@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
+import { AccessToken, VoiceGrant } from 'twilio/lib/jwt/AccessToken'
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,40 +34,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create access token with exact Twilio format
-    const now = Math.floor(Date.now() / 1000)
-    
-    // Try without jti first - some Twilio implementations don't require it
-    const payload = {
-      iss: apiKey,
-      sub: accountSid,
-      nbf: now,
-      exp: now + 3600, // 1 hour expiration
-      grants: {
-        identity: identity,
-        voice: {
-          outgoing: {
-            application_sid: appSid
-          },
-          incoming: {
-            allow: true
-          }
-        }
-      }
-    }
+    console.log('Creating Twilio Access Token for identity:', identity)
 
-    console.log('Creating JWT with payload:', {
-      iss: payload.iss.substring(0, 8) + '...',
-      sub: payload.sub.substring(0, 8) + '...',
-      exp: payload.exp,
-      identity: payload.grants.identity,
-      appSid: payload.grants.voice.outgoing.application_sid.substring(0, 8) + '...',
-      actualIss: payload.iss,
-      actualSub: payload.sub,
-      actualAppSid: payload.grants.voice.outgoing.application_sid
+    // Use official Twilio SDK to generate token
+    const accessToken = new AccessToken(accountSid, apiKey, apiSecret, {
+      identity: identity,
+      ttl: 3600 // 1 hour
     })
 
-    const token = jwt.sign(payload, apiSecret, { algorithm: 'HS256' })
+    // Create voice grant
+    const voiceGrant = new VoiceGrant({
+      outgoingApplicationSid: appSid,
+      incomingAllow: true
+    })
+
+    accessToken.addGrant(voiceGrant)
+    const token = accessToken.toJwt()
+
+    console.log('Token generated successfully using Twilio SDK:', {
+      identity: identity,
+      tokenLength: token.length,
+      appSid: appSid.substring(0, 8) + '...'
+    })
 
     return NextResponse.json({
       success: true,
