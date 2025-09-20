@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { CallButton } from '@/components/CallButton'
 import { SMSDialog } from '@/components/SMSDialog'
 import { ContactsDesktop } from '@/components/ContactsDesktop'
+import { AIPhoneCallAssistant } from '@/components/AIPhoneCallAssistant'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
@@ -112,6 +113,18 @@ export default function Dashboard() {
               <div className="w-4 h-4 mr-3 rounded bg-gradient-to-br from-purple-500 to-pink-500"></div>
               Sona
               <span className="ml-1 text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded group-hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300">Try for free</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('ai-calls')}
+              className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                activeTab === 'ai-calls'
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'text-[var(--foreground)] hover:bg-[var(--card-bg)]'
+              }`}
+            >
+              <Phone className="w-4 h-4 mr-3" />
+              AI Calls
             </button>
             
             <button
@@ -381,6 +394,21 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+          
+          {activeTab === 'ai-calls' && (
+            <div className="flex-1 bg-[var(--card-bg)] p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-semibold text-[var(--foreground)] mb-2">AI Phone Assistant</h2>
+                <p className="text-[var(--text-muted)]">Have a conversation with the AI to plan your call, then let it handle the conversation</p>
+              </div>
+              
+              <AIPhoneCallAssistant 
+                toNumber="+1234567890"
+                fromNumber="+1830448333"
+                brandId="triton"
+              />
             </div>
           )}
           

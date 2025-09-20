@@ -3,6 +3,8 @@ import { ClaudeService } from '@/lib/claude'
 import { brands } from '@/types/brand'
 
 export async function POST(request: NextRequest) {
+  console.log('Gather webhook called')
+  
   try {
     const formData = await request.formData()
     const speechResult = formData.get('SpeechResult') as string
@@ -12,14 +14,16 @@ export async function POST(request: NextRequest) {
 
     console.log('Speech input received:', { speechResult, callSid, from, to })
 
-    if (!speechResult) {
+    if (!speechResult || speechResult.trim() === '') {
+      console.log('No speech result, asking for repeat')
+      
       const noInputTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="alice">I didn't catch that. Could you please repeat what you need help with?</Say>
-    <Gather input="speech" timeout="5" action="/api/twilio/webhooks/gather">
-        <Say voice="alice">I'm listening.</Say>
+    <Say voice="Polly.Joanna">I didn't catch that. Could you please repeat what you need help with?</Say>
+    <Gather input="speech" timeout="8" action="/api/twilio/webhooks/gather">
+        <Say voice="Polly.Joanna">I'm listening.</Say>
     </Gather>
-    <Say voice="alice">Thank you for calling. Goodbye!</Say>
+    <Say voice="Polly.Joanna">Thank you for calling. Someone will get back to you. Goodbye!</Say>
 </Response>`
 
       return new NextResponse(noInputTwiml, {
@@ -30,29 +34,39 @@ export async function POST(request: NextRequest) {
 
     // Determine which brand received the call
     const activeBrand = brands.find(b => b.phoneNumber === to) || brands[0]
+    console.log('Processing speech for brand:', activeBrand.name)
+    
+    // Create a more detailed prompt for the AI
+    let aiPrompt = `Caller said: "${speechResult}"`
+    
+    if (activeBrand.id === 'school') {
+      aiPrompt += ` This is a school-related call for Levi and Lola Moses. Please respond helpfully and offer to take notes or messages. Be warm but professional.`
+    }
     
     // Generate AI response using Claude with brand personality
     const aiResponse = await ClaudeService.generateResponse(
-      speechResult,
+      aiPrompt,
       {
         phoneNumber: to,
         contactName: from,
-        agentPersonality: `${activeBrand.aiPersonality} Be concise and professional when helping callers for ${activeBrand.name}.`
+        agentPersonality: activeBrand.aiPersonality
       }
     )
 
+    console.log('AI Response generated:', { success: aiResponse.success, response: aiResponse.response?.substring(0, 100) })
+
     const responseText = aiResponse.success 
       ? aiResponse.response 
-      : "I understand you need assistance. Let me transfer you to voicemail so someone can get back to you."
+      : "I understand you need assistance. Let me take a note for you and someone will get back to you soon."
 
     // Create TwiML response with AI-generated text
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="alice">${responseText}</Say>
-    <Gather input="speech" timeout="5" action="/api/twilio/webhooks/gather">
-        <Say voice="alice">Is there anything else I can help you with?</Say>
+    <Say voice="Polly.Joanna">${responseText}</Say>
+    <Gather input="speech" timeout="8" action="/api/twilio/webhooks/gather">
+        <Say voice="Polly.Joanna">Is there anything else I can help you with?</Say>
     </Gather>
-    <Say voice="alice">Thank you for calling. Have a great day!</Say>
+    <Say voice="Polly.Joanna">Thank you for calling. Have a great day!</Say>
 </Response>`
 
     return new NextResponse(twiml, {
@@ -66,7 +80,7 @@ export async function POST(request: NextRequest) {
     
     const errorTwiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="alice">Thank you for your call. Someone will get back to you soon. Goodbye!</Say>
+    <Say voice="Polly.Joanna">I'm experiencing some technical difficulties. Please call back or someone will get back to you soon. Goodbye!</Say>
 </Response>`
 
     return new NextResponse(errorTwiml, {

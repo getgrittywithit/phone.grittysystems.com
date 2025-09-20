@@ -7,6 +7,18 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Phone Hub - Family Communication Center",
   description: "Manage all your family phone numbers in one place",
+  manifest: '/manifest.json',
+  themeColor: '#8B5CF6',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Phone Hub'
+  },
+  icons: {
+    apple: '/phone-icon.svg',
+    icon: '/phone-icon.svg'
+  }
 };
 
 export default function RootLayout({

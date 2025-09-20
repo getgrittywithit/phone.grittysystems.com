@@ -1,5 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk'
 
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('Missing Anthropic API key in environment variables')
+}
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 })

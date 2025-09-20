@@ -1,0 +1,45 @@
+{
+  "name": "Phone Hub - Family Communication",
+  "short_name": "Phone Hub",
+  "description": "Family phone communication center with AI assistants",
+  "start_url": "/mobile",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8B5CF6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/phone-icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["communication", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Contacts",
+      "short_name": "Contacts",
+      "description": "View and manage contacts",
+      "url": "/mobile?tab=contacts",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Keypad",
+      "short_name": "Keypad",
+      "description": "Make a call",
+      "url": "/mobile?tab=keypad",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
