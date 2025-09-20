@@ -49,9 +49,17 @@ export function useVoiceCalling(identity: string) {
           logLevel: 1
         })
 
+        // Register the device to receive calls
+        await twilioDevice.register()
+
         // Device event listeners
         twilioDevice.on('ready', () => {
           console.log('Twilio Device ready')
+          setCallState(prev => ({ ...prev, deviceReady: true, error: null }))
+        })
+
+        twilioDevice.on('registered', () => {
+          console.log('Twilio Device registered')
           setCallState(prev => ({ ...prev, deviceReady: true, error: null }))
         })
 

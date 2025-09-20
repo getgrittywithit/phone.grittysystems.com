@@ -377,8 +377,11 @@ export default function MobileApp() {
                     <div className={`w-2 h-2 rounded-full ${
                       callState.deviceReady ? 'bg-green-500' : 'bg-red-500'
                     }`}></div>
-                    <span>{callState.deviceReady ? 'Ready' : 'Connecting...'}</span>
+                    <span>{callState.deviceReady ? 'Ready' : 'Click keypad to activate'}</span>
                   </div>
+                  {callState.error && (
+                    <p className="text-xs text-red-600 mt-1">{callState.error}</p>
+                  )}
                 </div>
               )}
 
