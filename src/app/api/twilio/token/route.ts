@@ -33,14 +33,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create access token with proper Twilio format
+    // Create access token with exact Twilio format
     const now = Math.floor(Date.now() / 1000)
+    
+    // Try without jti first - some Twilio implementations don't require it
     const payload = {
       iss: apiKey,
       sub: accountSid,
       nbf: now,
       exp: now + 3600, // 1 hour expiration
-      jti: `${apiKey}-${now}`,
       grants: {
         identity: identity,
         voice: {
@@ -57,19 +58,15 @@ export async function POST(request: NextRequest) {
     console.log('Creating JWT with payload:', {
       iss: payload.iss.substring(0, 8) + '...',
       sub: payload.sub.substring(0, 8) + '...',
-      jti: payload.jti.substring(0, 15) + '...',
       exp: payload.exp,
       identity: payload.grants.identity,
-      appSid: payload.grants.voice.outgoing.application_sid.substring(0, 8) + '...'
+      appSid: payload.grants.voice.outgoing.application_sid.substring(0, 8) + '...',
+      actualIss: payload.iss,
+      actualSub: payload.sub,
+      actualAppSid: payload.grants.voice.outgoing.application_sid
     })
 
-    const token = jwt.sign(payload, apiSecret, { 
-      algorithm: 'HS256',
-      header: {
-        typ: 'JWT',
-        alg: 'HS256'
-      }
-    })
+    const token = jwt.sign(payload, apiSecret, { algorithm: 'HS256' })
 
     return NextResponse.json({
       success: true,
