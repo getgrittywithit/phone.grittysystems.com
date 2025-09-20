@@ -18,9 +18,17 @@ export async function POST(request: NextRequest) {
     const appSid = process.env.TWILIO_TWIML_APP_SID
 
     if (!accountSid || !apiKey || !apiSecret || !appSid) {
-      console.error('Missing Twilio credentials for token generation')
+      console.error('Missing Twilio credentials for token generation', {
+        hasAccountSid: !!accountSid,
+        hasApiKey: !!apiKey,
+        hasApiSecret: !!apiSecret,
+        hasAppSid: !!appSid
+      })
       return NextResponse.json(
-        { error: 'Server configuration error' },
+        { 
+          error: 'Server configuration error',
+          success: false
+        },
         { status: 500 }
       )
     }
@@ -55,8 +63,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error generating Twilio token:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to generate token' },
+      { 
+        error: 'Failed to generate token',
+        details: errorMessage,
+        success: false
+      },
       { status: 500 }
     )
   }
