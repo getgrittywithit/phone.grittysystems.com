@@ -419,7 +419,7 @@ export default function MobileApp() {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="Enter phone number"
-                  className="w-full text-2xl font-light text-center py-4 mb-4 border-b border-gray-200 focus:outline-none"
+                  className="w-full text-2xl font-light text-gray-900 text-center py-4 mb-4 border-b border-gray-200 focus:outline-none bg-transparent"
                 />
                 {phoneNumber && (
                   <button
@@ -438,7 +438,7 @@ export default function MobileApp() {
                     key={digit}
                     type="button"
                     onClick={() => handleKeypadPress(digit)}
-                    className="h-16 text-2xl font-light bg-gray-50 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                    className="h-16 text-2xl font-light text-gray-900 bg-gray-50 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
                   >
                     {digit}
                   </button>
