@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button'
 interface SMSDialogProps {
   toNumber: string
   fromNumber: string
+  onMessageSent?: () => void
 }
 
-export function SMSDialog({ toNumber, fromNumber }: SMSDialogProps) {
+export function SMSDialog({ toNumber, fromNumber, onMessageSent }: SMSDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -39,6 +40,7 @@ export function SMSDialog({ toNumber, fromNumber }: SMSDialogProps) {
       if (result.success) {
         setStatus('Message sent!')
         setMessage('')
+        onMessageSent?.() // Call the callback to refresh conversations
         setTimeout(() => {
           setStatus('')
           setIsOpen(false)
