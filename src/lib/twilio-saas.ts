@@ -1,3 +1,4 @@
+// @ts-ignore - Twilio types issue
 import twilio from 'twilio'
 
 interface AvailableNumber {

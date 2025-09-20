@@ -1,3 +1,4 @@
+// @ts-ignore - Twilio types issue
 import twilio from 'twilio'
 
 if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
