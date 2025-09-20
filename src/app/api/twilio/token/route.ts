@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import twilio from 'twilio'
+import jwt from 'jsonwebtoken'
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,25 +35,37 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating Twilio Access Token for identity:', identity)
 
-    // Use official Twilio SDK to generate token
-    const accessToken = new twilio.jwt.AccessToken(accountSid, apiKey, apiSecret, {
-      identity: identity,
-      ttl: 3600 // 1 hour
+    // Create JWT token manually with correct Twilio format
+    const now = Math.floor(Date.now() / 1000)
+    const payload = {
+      iss: apiKey,
+      sub: accountSid,
+      nbf: now,
+      exp: now + 3600, // 1 hour expiration
+      grants: {
+        identity: identity,
+        voice: {
+          outgoing: {
+            application_sid: appSid
+          },
+          incoming: {
+            allow: true
+          }
+        }
+      }
+    }
+
+    // Use HS256 algorithm as required by Twilio
+    const token = jwt.sign(payload, apiSecret, { 
+      algorithm: 'HS256'
     })
 
-    // Create voice grant
-    const voiceGrant = new twilio.jwt.AccessToken.VoiceGrant({
-      outgoingApplicationSid: appSid,
-      incomingAllow: true
-    })
-
-    accessToken.addGrant(voiceGrant)
-    const token = accessToken.toJwt()
-
-    console.log('Token generated successfully using Twilio SDK:', {
+    console.log('Token generated successfully:', {
       identity: identity,
       tokenLength: token.length,
-      appSid: appSid.substring(0, 8) + '...'
+      appSid: appSid.substring(0, 8) + '...',
+      issuer: apiKey.substring(0, 8) + '...',
+      subject: accountSid.substring(0, 8) + '...'
     })
 
     return NextResponse.json({

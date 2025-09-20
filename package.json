@@ -33,7 +33,6 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.1",
-    "twilio": "^5.10.0",
     "vcard-parser": "^1.0.0",
     "vcf": "^2.1.2"
   },
