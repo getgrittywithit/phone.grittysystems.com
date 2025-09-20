@@ -1,0 +1,203 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { Device, Call } from '@twilio/voice-sdk'
+
+interface CallState {
+  isConnected: boolean
+  isConnecting: boolean
+  isMuted: boolean
+  activeCall: Call | null
+  deviceReady: boolean
+  error: string | null
+}
+
+export function useVoiceCalling(identity: string) {
+  const [device, setDevice] = useState<Device | null>(null)
+  const [callState, setCallState] = useState<CallState>({
+    isConnected: false,
+    isConnecting: false,
+    isMuted: false,
+    activeCall: null,
+    deviceReady: false,
+    error: null
+  })
+
+  // Initialize Twilio Device
+  useEffect(() => {
+    let twilioDevice: Device | null = null
+
+    const initializeDevice = async () => {
+      try {
+        console.log('Initializing Twilio Device...')
+        
+        // Get access token from our API
+        const response = await fetch('/api/twilio/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identity })
+        })
+
+        const { token, success, error } = await response.json()
+        
+        if (!success) {
+          throw new Error(error || 'Failed to get access token')
+        }
+
+        // Create and setup device
+        twilioDevice = new Device(token, {
+          logLevel: 1
+        })
+
+        // Device event listeners
+        twilioDevice.on('ready', () => {
+          console.log('Twilio Device ready')
+          setCallState(prev => ({ ...prev, deviceReady: true, error: null }))
+        })
+
+        twilioDevice.on('error', (error) => {
+          console.error('Twilio Device error:', error)
+          setCallState(prev => ({ ...prev, error: error.message, deviceReady: false }))
+        })
+
+        twilioDevice.on('incoming', (call) => {
+          console.log('Incoming call received:', call)
+          setCallState(prev => ({ ...prev, activeCall: call }))
+          
+          // Set up call event listeners
+          setupCallListeners(call)
+        })
+
+        twilioDevice.on('disconnect', () => {
+          console.log('Twilio Device disconnected')
+          setCallState(prev => ({ 
+            ...prev, 
+            deviceReady: false, 
+            isConnected: false,
+            activeCall: null 
+          }))
+        })
+
+        setDevice(twilioDevice)
+
+      } catch (error) {
+        console.error('Failed to initialize Twilio Device:', error)
+        setCallState(prev => ({ 
+          ...prev, 
+          error: error instanceof Error ? error.message : 'Device initialization failed',
+          deviceReady: false 
+        }))
+      }
+    }
+
+    if (identity) {
+      initializeDevice()
+    }
+
+    // Cleanup
+    return () => {
+      if (twilioDevice) {
+        twilioDevice.destroy()
+      }
+    }
+  }, [identity])
+
+  const setupCallListeners = (call: Call) => {
+    call.on('accept', () => {
+      console.log('Call accepted')
+      setCallState(prev => ({ 
+        ...prev, 
+        isConnected: true, 
+        isConnecting: false,
+        activeCall: call 
+      }))
+    })
+
+    call.on('disconnect', () => {
+      console.log('Call disconnected')
+      setCallState(prev => ({ 
+        ...prev, 
+        isConnected: false, 
+        isConnecting: false,
+        activeCall: null,
+        isMuted: false
+      }))
+    })
+
+    call.on('cancel', () => {
+      console.log('Call cancelled')
+      setCallState(prev => ({ 
+        ...prev, 
+        isConnected: false, 
+        isConnecting: false,
+        activeCall: null 
+      }))
+    })
+  }
+
+  const makeCall = async (phoneNumber: string, fromNumber: string) => {
+    if (!device || !callState.deviceReady) {
+      throw new Error('Device not ready')
+    }
+
+    try {
+      setCallState(prev => ({ ...prev, isConnecting: true, error: null }))
+      
+      const call = await device.connect({
+        params: {
+          To: phoneNumber,
+          From: fromNumber
+        }
+      })
+
+      setupCallListeners(call)
+      setCallState(prev => ({ ...prev, activeCall: call }))
+
+      return call
+    } catch (error) {
+      console.error('Failed to make call:', error)
+      setCallState(prev => ({ 
+        ...prev, 
+        isConnecting: false,
+        error: error instanceof Error ? error.message : 'Call failed'
+      }))
+      throw error
+    }
+  }
+
+  const hangUp = () => {
+    if (callState.activeCall) {
+      callState.activeCall.disconnect()
+    }
+  }
+
+  const mute = () => {
+    if (callState.activeCall) {
+      callState.activeCall.mute(!callState.isMuted)
+      setCallState(prev => ({ ...prev, isMuted: !prev.isMuted }))
+    }
+  }
+
+  const acceptCall = () => {
+    if (callState.activeCall) {
+      callState.activeCall.accept()
+    }
+  }
+
+  const rejectCall = () => {
+    if (callState.activeCall) {
+      callState.activeCall.reject()
+      setCallState(prev => ({ ...prev, activeCall: null }))
+    }
+  }
+
+  return {
+    device,
+    callState,
+    makeCall,
+    hangUp,
+    mute,
+    acceptCall,
+    rejectCall
+  }
+}
