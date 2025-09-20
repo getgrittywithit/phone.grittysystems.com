@@ -29,7 +29,7 @@ export function useVoiceCalling(identity: string) {
 
     const initializeDevice = async () => {
       try {
-        console.log('Initializing Twilio Device...')
+        console.log('Initializing Twilio Device for identity:', identity)
         
         // Get access token from our API
         const response = await fetch('/api/twilio/token', {
@@ -38,16 +38,20 @@ export function useVoiceCalling(identity: string) {
           body: JSON.stringify({ identity })
         })
 
-        const { token, success, error } = await response.json()
+        const result = await response.json()
+        console.log('Token API response:', { success: result.success, hasToken: !!result.token })
         
-        if (!success) {
-          throw new Error(error || 'Failed to get access token')
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to get access token')
         }
 
         // Create and setup device
-        twilioDevice = new Device(token, {
+        console.log('Creating Twilio Device with token...')
+        twilioDevice = new Device(result.token, {
           logLevel: 1
         })
+        
+        console.log('Device created, setting up event listeners...')
 
         // Register the device to receive calls
         await twilioDevice.register()
@@ -65,7 +69,18 @@ export function useVoiceCalling(identity: string) {
 
         twilioDevice.on('error', (error) => {
           console.error('Twilio Device error:', error)
-          setCallState(prev => ({ ...prev, error: error.message, deviceReady: false }))
+          console.error('Error details:', {
+            message: error.message,
+            code: error.code,
+            explanation: error.explanation,
+            causes: error.causes,
+            stack: error.stack
+          })
+          setCallState(prev => ({ 
+            ...prev, 
+            error: `${error.message} (Code: ${error.code})`, 
+            deviceReady: false 
+          }))
         })
 
         twilioDevice.on('incoming', (call) => {
