@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { AccessToken } from 'twilio/lib/jwt/AccessToken'
-import { VoiceGrant } from 'twilio/lib/jwt/AccessToken'
+import { jwt } from 'twilio'
 
 export async function GET() {
   try {
@@ -10,12 +9,12 @@ export async function GET() {
     const appSid = process.env.TWILIO_TWIML_APP_SID!
 
     // Create token using official Twilio SDK
-    const accessToken = new AccessToken(accountSid, apiKey, apiSecret, {
+    const accessToken = new jwt.AccessToken(accountSid, apiKey, apiSecret, {
       identity: 'sdk_test_user'
     })
 
     // Create voice grant
-    const voiceGrant = new VoiceGrant({
+    const voiceGrant = new jwt.AccessToken.VoiceGrant({
       outgoingApplicationSid: appSid,
       incomingAllow: true
     })
