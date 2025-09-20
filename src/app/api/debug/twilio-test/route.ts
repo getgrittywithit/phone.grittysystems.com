@@ -84,12 +84,12 @@ export async function GET() {
     }
   }
 
-  // Test 3: JWT Structure (without actually verifying with Twilio)
+  // Test 3: JWT Structure and Twilio Token Validation
   if (apiKey && apiSecret && appSid) {
     try {
       results.jwtStructure.tested = true
       
-      // Create a test JWT token
+      // Create a test JWT token using the same method as our token endpoint
       const now = Math.floor(Date.now() / 1000)
       const payload = {
         iss: apiKey,
@@ -114,12 +114,39 @@ export async function GET() {
       // Decode to verify structure
       const decoded = jwt.decode(token) as any
       
-      results.jwtStructure.success = true
-      results.jwtStructure.error = {
-        tokenLength: token.length,
-        hasValidStructure: !!decoded?.grants?.voice,
-        issuer: decoded?.iss?.substring(0, 4) + '...',
-        subject: decoded?.sub?.substring(0, 4) + '...'
+      // Test the token with Twilio's validation by trying to use it
+      try {
+        const twilioValidationResponse = await fetch(`https://accounts.twilio.com/v1/Accounts/${accountSid}/Tokens/validate`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        })
+
+        const twilioValidationResult = await twilioValidationResponse.text()
+        
+        results.jwtStructure.success = true
+        results.jwtStructure.error = {
+          tokenLength: token.length,
+          hasValidStructure: !!decoded?.grants?.voice,
+          issuer: decoded?.iss?.substring(0, 4) + '...',
+          subject: decoded?.sub?.substring(0, 4) + '...',
+          twilioValidation: {
+            status: twilioValidationResponse.status,
+            statusText: twilioValidationResponse.statusText,
+            response: twilioValidationResult.substring(0, 200)
+          }
+        }
+      } catch (twilioError) {
+        results.jwtStructure.success = true
+        results.jwtStructure.error = {
+          tokenLength: token.length,
+          hasValidStructure: !!decoded?.grants?.voice,
+          issuer: decoded?.iss?.substring(0, 4) + '...',
+          subject: decoded?.sub?.substring(0, 4) + '...',
+          twilioValidationError: twilioError instanceof Error ? twilioError.message : 'Twilio validation failed'
+        }
       }
     } catch (error) {
       results.jwtStructure.success = false
