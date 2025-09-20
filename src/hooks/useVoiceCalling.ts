@@ -14,6 +14,7 @@ interface CallState {
 
 export function useVoiceCalling(identity: string) {
   const [device, setDevice] = useState<Device | null>(null)
+  const [deviceInitialized, setDeviceInitialized] = useState(false)
   const [callState, setCallState] = useState<CallState>({
     isConnected: false,
     isConnecting: false,
@@ -23,107 +24,105 @@ export function useVoiceCalling(identity: string) {
     error: null
   })
 
-  // Initialize Twilio Device
-  useEffect(() => {
-    let twilioDevice: Device | null = null
+  // Initialize device manually on user interaction
+  const initializeDevice = async () => {
+    if (deviceInitialized || device) return
 
-    const initializeDevice = async () => {
-      try {
-        console.log('Initializing Twilio Device for identity:', identity)
-        
-        // Get access token from our API
-        const response = await fetch('/api/twilio/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identity })
+    try {
+      console.log('Initializing Twilio Device for identity:', identity)
+      setDeviceInitialized(true)
+      
+      // Get access token from our API
+      const response = await fetch('/api/twilio/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identity })
+      })
+
+      const result = await response.json()
+      console.log('Token API response:', { success: result.success, hasToken: !!result.token })
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to get access token')
+      }
+
+      // Create and setup device
+      console.log('Creating Twilio Device with token...')
+      const twilioDevice = new Device(result.token, {
+        logLevel: 1
+      })
+      
+      console.log('Device created, setting up event listeners...')
+
+      // Device event listeners
+      twilioDevice.on('ready', () => {
+        console.log('Twilio Device ready')
+        setCallState(prev => ({ ...prev, deviceReady: true, error: null }))
+      })
+
+      twilioDevice.on('registered', () => {
+        console.log('Twilio Device registered')
+        setCallState(prev => ({ ...prev, deviceReady: true, error: null }))
+      })
+
+      twilioDevice.on('error', (error) => {
+        console.error('Twilio Device error:', error)
+        console.error('Error details:', {
+          message: error.message,
+          code: error.code,
+          explanation: error.explanation,
+          causes: error.causes,
+          stack: error.stack
         })
-
-        const result = await response.json()
-        console.log('Token API response:', { success: result.success, hasToken: !!result.token })
-        
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to get access token')
-        }
-
-        // Create and setup device
-        console.log('Creating Twilio Device with token...')
-        twilioDevice = new Device(result.token, {
-          logLevel: 1
-        })
-        
-        console.log('Device created, setting up event listeners...')
-
-        // Register the device to receive calls
-        await twilioDevice.register()
-
-        // Device event listeners
-        twilioDevice.on('ready', () => {
-          console.log('Twilio Device ready')
-          setCallState(prev => ({ ...prev, deviceReady: true, error: null }))
-        })
-
-        twilioDevice.on('registered', () => {
-          console.log('Twilio Device registered')
-          setCallState(prev => ({ ...prev, deviceReady: true, error: null }))
-        })
-
-        twilioDevice.on('error', (error) => {
-          console.error('Twilio Device error:', error)
-          console.error('Error details:', {
-            message: error.message,
-            code: error.code,
-            explanation: error.explanation,
-            causes: error.causes,
-            stack: error.stack
-          })
-          setCallState(prev => ({ 
-            ...prev, 
-            error: `${error.message} (Code: ${error.code})`, 
-            deviceReady: false 
-          }))
-        })
-
-        twilioDevice.on('incoming', (call) => {
-          console.log('Incoming call received:', call)
-          setCallState(prev => ({ ...prev, activeCall: call }))
-          
-          // Set up call event listeners
-          setupCallListeners(call)
-        })
-
-        twilioDevice.on('disconnect', () => {
-          console.log('Twilio Device disconnected')
-          setCallState(prev => ({ 
-            ...prev, 
-            deviceReady: false, 
-            isConnected: false,
-            activeCall: null 
-          }))
-        })
-
-        setDevice(twilioDevice)
-
-      } catch (error) {
-        console.error('Failed to initialize Twilio Device:', error)
         setCallState(prev => ({ 
           ...prev, 
-          error: error instanceof Error ? error.message : 'Device initialization failed',
+          error: `${error.message} (Code: ${error.code})`, 
           deviceReady: false 
         }))
-      }
-    }
+      })
 
-    if (identity) {
-      initializeDevice()
-    }
+      twilioDevice.on('incoming', (call) => {
+        console.log('Incoming call received:', call)
+        setCallState(prev => ({ ...prev, activeCall: call }))
+        
+        // Set up call event listeners
+        setupCallListeners(call)
+      })
 
-    // Cleanup
+      twilioDevice.on('disconnect', () => {
+        console.log('Twilio Device disconnected')
+        setCallState(prev => ({ 
+          ...prev, 
+          deviceReady: false, 
+          isConnected: false,
+          activeCall: null 
+        }))
+      })
+
+      // Register the device to receive calls
+      await twilioDevice.register()
+      setDevice(twilioDevice)
+
+    } catch (error) {
+      console.error('Failed to initialize Twilio Device:', error)
+      setCallState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Device initialization failed',
+        deviceReady: false 
+      }))
+      setDeviceInitialized(false)
+    }
+  }
+
+  // Cleanup effect
+  useEffect(() => {
     return () => {
-      if (twilioDevice) {
-        twilioDevice.destroy()
+      if (device) {
+        console.log('Cleaning up Twilio Device')
+        device.destroy()
       }
     }
-  }, [identity])
+  }, [device])
 
   const setupCallListeners = (call: Call) => {
     call.on('accept', () => {
@@ -159,6 +158,11 @@ export function useVoiceCalling(identity: string) {
   }
 
   const makeCall = async (phoneNumber: string, fromNumber: string) => {
+    // Initialize device on first use (requires user interaction)
+    if (!device && !deviceInitialized) {
+      await initializeDevice()
+    }
+
     if (!device || !callState.deviceReady) {
       throw new Error('Device not ready')
     }
@@ -221,6 +225,7 @@ export function useVoiceCalling(identity: string) {
     hangUp,
     mute,
     acceptCall,
-    rejectCall
+    rejectCall,
+    initializeDevice
   }
 }

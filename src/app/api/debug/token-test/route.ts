@@ -8,9 +8,30 @@ export async function GET() {
     const apiSecret = process.env.TWILIO_API_SECRET!
     const appSid = process.env.TWILIO_TWIML_APP_SID!
 
-    // Create JWT token exactly like our token endpoint
+    // Create JWT token with correct Twilio format
     const now = Math.floor(Date.now() / 1000)
-    const payload = {
+    
+    // Try both formats to see which one works
+    const correctPayload = {
+      iss: apiKey,
+      sub: accountSid,
+      nbf: now,
+      exp: now + 3600,
+      jti: `${apiKey}-${now}`, // Add jti (JWT ID) - sometimes required
+      grants: {
+        identity: 'debug_user',
+        voice: {
+          outgoing: {
+            application_sid: appSid
+          },
+          incoming: {
+            allow: true
+          }
+        }
+      }
+    }
+
+    const alternativePayload = {
       iss: apiKey,
       sub: accountSid,
       nbf: now,
@@ -28,31 +49,30 @@ export async function GET() {
       }
     }
 
-    const token = jwt.sign(payload, apiSecret, { algorithm: 'HS256' })
+    const tokenWithJti = jwt.sign(correctPayload, apiSecret, { algorithm: 'HS256' })
+    const tokenWithoutJti = jwt.sign(alternativePayload, apiSecret, { algorithm: 'HS256' })
     
-    // Decode to inspect payload
-    const decoded = jwt.decode(token, { complete: true }) as any
+    // Decode both to inspect
+    const decodedWithJti = jwt.decode(tokenWithJti, { complete: true }) as any
+    const decodedWithoutJti = jwt.decode(tokenWithoutJti, { complete: true }) as any
     
     return NextResponse.json({
       success: true,
-      token: token,
-      tokenInfo: {
-        header: decoded?.header,
-        payload: {
-          iss: decoded?.payload?.iss,
-          sub: decoded?.payload?.sub,
-          nbf: decoded?.payload?.nbf,
-          exp: decoded?.payload?.exp,
-          grants: decoded?.payload?.grants
-        },
-        signature: decoded?.signature?.substring(0, 10) + '...'
+      currentToken: tokenWithoutJti, // This matches our current implementation
+      improvedToken: tokenWithJti,
+      currentDecoded: {
+        header: decodedWithoutJti?.header,
+        payload: decodedWithoutJti?.payload
       },
-      validation: {
-        isValidJWT: !!decoded,
-        hasVoiceGrants: !!decoded?.payload?.grants?.voice,
-        hasOutgoingGrants: !!decoded?.payload?.grants?.voice?.outgoing,
-        hasApplicationSid: !!decoded?.payload?.grants?.voice?.outgoing?.application_sid,
-        applicationSidMatches: decoded?.payload?.grants?.voice?.outgoing?.application_sid === appSid
+      improvedDecoded: {
+        header: decodedWithJti?.header,
+        payload: decodedWithJti?.payload
+      },
+      envCheck: {
+        accountSid: accountSid.substring(0, 10) + '...',
+        apiKey: apiKey.substring(0, 10) + '...',
+        appSid: appSid.substring(0, 10) + '...',
+        apiSecretLength: apiSecret.length
       }
     })
   } catch (error) {

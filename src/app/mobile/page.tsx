@@ -38,7 +38,7 @@ export default function MobileApp() {
   const [callMode, setCallMode] = useState<'browser' | 'server'>('browser')
   
   // Voice calling
-  const { callState, makeCall, hangUp, mute, acceptCall, rejectCall } = useVoiceCalling('moses_family_user')
+  const { callState, makeCall, hangUp, mute, acceptCall, rejectCall, initializeDevice } = useVoiceCalling('moses_family_user')
   
   // Conversation state
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -372,13 +372,21 @@ export default function MobileApp() {
                   <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs ${
                     callState.deviceReady 
                       ? 'bg-green-100 text-green-700' 
-                      : 'bg-red-100 text-red-700'
+                      : 'bg-yellow-100 text-yellow-700'
                   }`}>
                     <div className={`w-2 h-2 rounded-full ${
-                      callState.deviceReady ? 'bg-green-500' : 'bg-red-500'
+                      callState.deviceReady ? 'bg-green-500' : 'bg-yellow-500'
                     }`}></div>
-                    <span>{callState.deviceReady ? 'Ready' : 'Click keypad to activate'}</span>
+                    <span>{callState.deviceReady ? 'Ready' : 'Click to activate voice calling'}</span>
                   </div>
+                  {!callState.deviceReady && !callState.error && (
+                    <button
+                      onClick={initializeDevice}
+                      className="mt-2 px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      Activate Voice Calling
+                    </button>
+                  )}
                   {callState.error && (
                     <p className="text-xs text-red-600 mt-1">{callState.error}</p>
                   )}
