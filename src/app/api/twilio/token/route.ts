@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jwt } from 'twilio'
+import twilio from 'twilio'
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,13 +36,13 @@ export async function POST(request: NextRequest) {
     console.log('Creating Twilio Access Token for identity:', identity)
 
     // Use official Twilio SDK to generate token
-    const accessToken = new jwt.AccessToken(accountSid, apiKey, apiSecret, {
+    const accessToken = new twilio.jwt.AccessToken(accountSid, apiKey, apiSecret, {
       identity: identity,
       ttl: 3600 // 1 hour
     })
 
     // Create voice grant
-    const voiceGrant = new jwt.AccessToken.VoiceGrant({
+    const voiceGrant = new twilio.jwt.AccessToken.VoiceGrant({
       outgoingApplicationSid: appSid,
       incomingAllow: true
     })
