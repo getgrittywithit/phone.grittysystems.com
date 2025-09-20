@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       sub: accountSid,
       nbf: now,
       exp: now + 3600, // 1 hour expiration
+      iat: now, // Add issued at time - sometimes required
       grants: {
         identity: identity,
         voice: {
