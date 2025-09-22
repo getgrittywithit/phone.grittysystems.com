@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,45 +34,82 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating Twilio Access Token for identity:', identity)
 
-    // Create JWT token manually with correct Twilio format
-    const now = Math.floor(Date.now() / 1000)
-    const payload = {
-      iss: apiKey,
-      sub: accountSid,
-      nbf: now,
-      exp: now + 3600, // 1 hour expiration
-      iat: now, // Add issued at time - sometimes required
-      grants: {
+    try {
+      // Use require to avoid TypeScript issues
+      const twilio = require('twilio')
+      
+      // Create token using official SDK
+      const AccessToken = twilio.jwt.AccessToken
+      const VoiceGrant = AccessToken.VoiceGrant
+
+      const accessToken = new AccessToken(
+        accountSid,
+        apiKey,
+        apiSecret,
+        { ttl: 3600 }
+      )
+
+      accessToken.identity = identity
+
+      const voiceGrant = new VoiceGrant({
+        outgoingApplicationSid: appSid,
+        incomingAllow: true
+      })
+
+      accessToken.addGrant(voiceGrant)
+      const token = accessToken.toJwt()
+
+      console.log('Token generated successfully using official SDK:', {
         identity: identity,
-        voice: {
-          outgoing: {
-            application_sid: appSid
-          },
-          incoming: {
-            allow: true
+        tokenLength: token.length,
+        appSid: appSid.substring(0, 8) + '...'
+      })
+
+      return NextResponse.json({
+        success: true,
+        token,
+        identity
+      })
+    } catch (sdkError) {
+      console.error('Failed to use official SDK, falling back to manual:', sdkError)
+      
+      // Fallback to manual JWT generation
+      const jwt = require('jsonwebtoken')
+      const now = Math.floor(Date.now() / 1000)
+      const payload = {
+        iss: apiKey,
+        sub: accountSid,
+        nbf: now,
+        exp: now + 3600,
+        iat: now,
+        grants: {
+          identity: identity,
+          voice: {
+            outgoing: {
+              application_sid: appSid
+            },
+            incoming: {
+              allow: true
+            }
           }
         }
       }
+
+      const token = jwt.sign(payload, apiSecret, { algorithm: 'HS256' })
+
+      console.log('Token generated using manual method:', {
+        identity: identity,
+        tokenLength: token.length,
+        appSid: appSid.substring(0, 8) + '...'
+      })
+
+      return NextResponse.json({
+        success: true,
+        token,
+        identity,
+        method: 'manual'
+      })
     }
-
-    // Use HS256 algorithm as required by Twilio
-    const token = jwt.sign(payload, apiSecret, { 
-      algorithm: 'HS256'
-    })
-
-    console.log('Token generated successfully:', {
-      identity: identity,
-      tokenLength: token.length,
-      appSid: appSid.substring(0, 8) + '...',
-      issuer: apiKey.substring(0, 8) + '...',
-      subject: accountSid.substring(0, 8) + '...'
-    })
-
-    return NextResponse.json({
-      success: true,
-      token,
-      identity
-    })
 
   } catch (error) {
     console.error('Error generating Twilio token:', error)
