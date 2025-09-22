@@ -18,10 +18,11 @@ export async function GET() {
       accountSid,
       apiKey,
       apiSecret,
-      { ttl: 3600 }
+      { 
+        ttl: 3600,
+        identity: 'test_user'
+      }
     )
-
-    accessToken.identity = 'test_user'
 
     const voiceGrant = new VoiceGrant({
       outgoingApplicationSid: appSid,

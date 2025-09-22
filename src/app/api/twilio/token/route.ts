@@ -46,10 +46,11 @@ export async function POST(request: NextRequest) {
         accountSid,
         apiKey,
         apiSecret,
-        { ttl: 3600 }
+        { 
+          ttl: 3600,
+          identity: identity 
+        }
       )
-
-      accessToken.identity = identity
 
       const voiceGrant = new VoiceGrant({
         outgoingApplicationSid: appSid,
