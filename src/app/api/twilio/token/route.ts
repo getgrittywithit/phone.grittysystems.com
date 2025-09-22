@@ -34,51 +34,60 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating Twilio Access Token for identity:', identity)
 
+    const authToken = process.env.TWILIO_AUTH_TOKEN
+    
+    // Check if we have auth token for Main API Key approach
+    if (!authToken) {
+      console.error('Missing TWILIO_AUTH_TOKEN - cannot use Main API Key approach')
+    }
+
     try {
       // Use require to avoid TypeScript issues
       const twilio = require('twilio')
       
       // Try using Main API Key (Account SID + Auth Token) for JWT generation
       // This often has full permissions that Restricted API Keys might lack
-      const authToken = process.env.TWILIO_AUTH_TOKEN!
+      if (authToken) {
+        console.log('Attempting JWT generation with Main API Key (Account SID + Auth Token)')
+        
+        // Create token using official SDK with Main API Key
+        const AccessToken = twilio.jwt.AccessToken
+        const VoiceGrant = AccessToken.VoiceGrant
+
+        const accessToken = new AccessToken(
+          accountSid,
+          accountSid, // Use Account SID as the issuer instead of API Key
+          authToken,  // Use Auth Token as the secret instead of API Secret
+          { 
+            ttl: 3600,
+            identity: identity 
+          }
+        )
+
+        const voiceGrant = new VoiceGrant({
+          outgoingApplicationSid: appSid,
+          incomingAllow: true
+        })
+
+        accessToken.addGrant(voiceGrant)
+        const token = accessToken.toJwt()
+
+        console.log('Token generated successfully using Main API Key:', {
+          identity: identity,
+          tokenLength: token.length,
+          issuer: 'Account SID',
+          appSid: appSid.substring(0, 8) + '...'
+        })
+
+        return NextResponse.json({
+          success: true,
+          token,
+          identity,
+          method: 'main_api_key'
+        })
+      }
       
-      console.log('Attempting JWT generation with Main API Key (Account SID + Auth Token)')
-      
-      // Create token using official SDK with Main API Key
-      const AccessToken = twilio.jwt.AccessToken
-      const VoiceGrant = AccessToken.VoiceGrant
-
-      const accessToken = new AccessToken(
-        accountSid,
-        accountSid, // Use Account SID as the issuer instead of API Key
-        authToken,  // Use Auth Token as the secret instead of API Secret
-        { 
-          ttl: 3600,
-          identity: identity 
-        }
-      )
-
-      const voiceGrant = new VoiceGrant({
-        outgoingApplicationSid: appSid,
-        incomingAllow: true
-      })
-
-      accessToken.addGrant(voiceGrant)
-      const token = accessToken.toJwt()
-
-      console.log('Token generated successfully using Main API Key:', {
-        identity: identity,
-        tokenLength: token.length,
-        issuer: 'Account SID',
-        appSid: appSid.substring(0, 8) + '...'
-      })
-
-      return NextResponse.json({
-        success: true,
-        token,
-        identity,
-        method: 'main_api_key'
-      })
+      throw new Error('TWILIO_AUTH_TOKEN not available - skipping Main API Key approach')
     } catch (mainKeyError) {
       console.error('Failed to use Main API Key, trying Restricted API Key:', mainKeyError)
       
