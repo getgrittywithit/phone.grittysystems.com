@@ -58,7 +58,7 @@ export class TwilioSaasService {
         .local
         .list(searchParams)
 
-      return numbers.map(num => ({
+      return numbers.map((num: any) => ({
         phoneNumber: num.phoneNumber,
         friendlyName: num.friendlyName,
         locality: num.locality || '',
@@ -123,14 +123,14 @@ export class TwilioSaasService {
         to: phoneNumberSid
       })
 
-      const totalMinutes = calls.reduce((sum, call) => {
+      const totalMinutes = calls.reduce((sum: number, call: any) => {
         return sum + (parseInt(call.duration || '0') / 60)
       }, 0)
 
       return {
         callCount: calls.length,
         totalMinutes: Math.ceil(totalMinutes),
-        calls: calls.map(call => ({
+        calls: calls.map((call: any) => ({
           sid: call.sid,
           from: call.from,
           duration: call.duration,
@@ -159,7 +159,7 @@ export class TwilioSaasService {
         .tollFree
         .list(searchParams)
 
-      return numbers.map(num => ({
+      return numbers.map((num: any) => ({
         phoneNumber: num.phoneNumber,
         friendlyName: num.friendlyName,
         locality: num.locality || '',
