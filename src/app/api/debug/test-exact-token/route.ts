@@ -54,7 +54,8 @@ export async function GET() {
       twilioValidation = {
         status: testResponse.status,
         statusText: testResponse.statusText,
-        success: testResponse.ok
+        success: testResponse.ok,
+        error: null
       }
       
       if (!testResponse.ok) {
