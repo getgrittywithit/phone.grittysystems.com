@@ -37,7 +37,7 @@ export async function GET() {
     const results = []
 
     for (const test of tests) {
-      const result = { name: test.name, basicAuth: null, apiKeyAuth: null }
+      const result: any = { name: test.name, basicAuth: null, apiKeyAuth: null }
 
       // Test with basic auth
       if (test.requiresAuth === 'both' || test.requiresAuth === 'basic_only') {
