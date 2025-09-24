@@ -55,7 +55,7 @@ export async function GET() {
         status: testResponse.status,
         statusText: testResponse.statusText,
         success: testResponse.ok,
-        error: null
+        error: null as string | null
       }
       
       if (!testResponse.ok) {
