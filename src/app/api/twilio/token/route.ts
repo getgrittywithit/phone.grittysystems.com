@@ -15,12 +15,14 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.TWILIO_API_KEY
     const apiSecret = process.env.TWILIO_API_SECRET
     const appSid = process.env.TWILIO_TWIML_APP_SID
+    const authToken = process.env.TWILIO_AUTH_TOKEN
 
-    if (!accountSid || !apiKey || !apiSecret || !appSid) {
-      console.error('Missing Twilio credentials for token generation', {
+    if (!accountSid || !appSid) {
+      console.error('Missing required Twilio credentials', {
         hasAccountSid: !!accountSid,
         hasApiKey: !!apiKey,
         hasApiSecret: !!apiSecret,
+        hasAuthToken: !!authToken,
         hasAppSid: !!appSid
       })
       return NextResponse.json(
@@ -32,22 +34,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Creating Twilio Access Token for identity:', identity)
-
-    const authToken = process.env.TWILIO_AUTH_TOKEN
-    
-    // Check if we have auth token for Main API Key approach
-    if (!authToken) {
-      console.error('Missing TWILIO_AUTH_TOKEN - cannot use Main API Key approach')
+    // Prefer Main API Key (Auth Token) over Restricted API Key
+    const useMainKey = authToken && accountSid
+    if (!useMainKey && (!apiKey || !apiSecret)) {
+      console.error('Missing API Key credentials and no Auth Token available')
+      return NextResponse.json(
+        { 
+          error: 'Server configuration error',
+          success: false
+        },
+        { status: 500 }
+      )
     }
+
+    console.log('Creating Twilio Access Token for identity:', identity, {
+      useMainKey,
+      hasAuthToken: !!authToken,
+      hasApiKey: !!apiKey
+    })
 
     try {
       // Use require to avoid TypeScript issues
       const twilio = require('twilio')
       
-      // Try using Main API Key (Account SID + Auth Token) for JWT generation
-      // This often has full permissions that Restricted API Keys might lack
-      if (authToken) {
+      if (useMainKey) {
         console.log('Attempting JWT generation with Main API Key (Account SID + Auth Token)')
         
         // Create token using official SDK with Main API Key
@@ -87,7 +97,7 @@ export async function POST(request: NextRequest) {
         })
       }
       
-      throw new Error('TWILIO_AUTH_TOKEN not available - skipping Main API Key approach')
+      throw new Error('Using Restricted API Key approach')
     } catch (mainKeyError) {
       console.error('Failed to use Main API Key, trying Restricted API Key:', mainKeyError)
       
